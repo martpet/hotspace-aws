@@ -33,7 +33,7 @@ export class InodesUpload extends Construct {
             s3.HttpMethods.DELETE,
             s3.HttpMethods.HEAD,
           ],
-          exposedHeaders: ["ETag"],
+          exposedHeaders: ["ETag", "Content-Disposition"],
         },
       ],
       lifecycleRules: [
