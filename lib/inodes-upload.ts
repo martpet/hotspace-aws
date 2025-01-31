@@ -20,13 +20,20 @@ export class InodesUpload extends Construct {
       ? "uploads.hotspace.lol"
       : "uploads.dev.hotspace.lol";
 
+    const localDevDomain = "https://hotspace.local";
+    const allowedOrigins = [`https://${domainName}`];
+
+    if (!isProd) {
+      allowedOrigins.push(`https://${localDevDomain}`);
+    }
+
     const bucket = new s3.Bucket(this, "Bucket", {
       bucketName,
       enforceSSL: true,
       transferAcceleration: true,
       cors: [
         {
-          allowedOrigins: [isProd ? `https://${domainName}` : "*"],
+          allowedOrigins,
           allowedHeaders: ["*"],
           allowedMethods: [
             s3.HttpMethods.GET,
