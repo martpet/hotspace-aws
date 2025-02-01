@@ -45,7 +45,6 @@ jobs:
       env:
           AWS_PROD_ACCOUNT: ${{ secrets.AWS_PROD_ACCOUNT }}
           AWS_DEV_ACCOUNT: ${{ secrets.AWS_DEV_ACCOUNT }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
       run: |
         if [[ "${{ github.ref_name }}" == "main" ]]; then
           npm run deploy-prod
