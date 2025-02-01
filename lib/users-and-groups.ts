@@ -1,9 +1,9 @@
 import * as iam from "aws-cdk-lib/aws-iam";
 import { Construct } from "constructs";
-import { InodesUpload } from "./inodes-upload";
+import { InodesBucket } from "./inodes-bucket";
 
 interface Props {
-  inodesUpload: InodesUpload;
+  inodesBucket: InodesBucket;
 }
 
 export class UsersAndGroups extends Construct {
@@ -22,7 +22,7 @@ export class UsersAndGroups extends Construct {
       groupName: "backend",
     });
 
-    backendGroup.attachInlinePolicy(props.inodesUpload.policy);
+    backendGroup.attachInlinePolicy(props.inodesBucket.policy);
 
     const githubUser = new iam.User(this, "GithubUser", {
       userName: "github-user",

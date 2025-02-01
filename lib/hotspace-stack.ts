@@ -1,14 +1,14 @@
 import * as cdk from "aws-cdk-lib";
 import { Construct } from "constructs";
-import { InodesUpload } from "./inodes-upload";
+import { InodesBucket } from "./inodes-bucket";
 import { UsersAndGroups } from "./users-and-groups";
 
 export class HotspaceStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    const inodesUpload = new InodesUpload(this, "InodesUpload");
+    const inodesBucket = new InodesBucket(this, "InodesBucket");
 
-    new UsersAndGroups(this, "UsersAndGroups", { inodesUpload });
+    new UsersAndGroups(this, "UsersAndGroups", { inodesBucket });
   }
 }

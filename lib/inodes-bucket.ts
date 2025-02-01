@@ -4,7 +4,7 @@ import { Policy } from "aws-cdk-lib/aws-iam";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import { Construct } from "constructs";
 
-export class InodesUpload extends Construct {
+export class InodesBucket extends Construct {
   policy: Policy;
 
   constructor(scope: Construct, id: string) {
@@ -16,15 +16,17 @@ export class InodesUpload extends Construct {
       ? "uploads-hotspace-lol"
       : "uploads-dev-hotspace-lol";
 
+    const allowedOrigins = isProd
+      ? ["https://hotspace.lol"]
+      : ["https://hotspace.local"];
+
     const bucket = new s3.Bucket(this, "Bucket", {
       bucketName,
       enforceSSL: true,
       transferAcceleration: true,
       cors: [
         {
-          allowedOrigins: isProd
-            ? ["https://hotspace.lol"]
-            : ["https://hotspace.local"],
+          allowedOrigins,
           allowedHeaders: ["*"],
           allowedMethods: [
             s3.HttpMethods.GET,
