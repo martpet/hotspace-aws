@@ -45,10 +45,12 @@ jobs:
       if: github.ref_name == 'main'
       env:
         AWS_PROD_ACCOUNT: ${{ secrets.AWS_PROD_ACCOUNT }}
+        CLOUDFRONT_SIGNER_PUBKEY: ${{ secrets.CLOUDFRONT_SIGNER_PUBKEY_PROD }}
       run: npm run deploy-prod
 
     - name: Deploy to Dev
       if: github.ref_name != 'main'
       env:
         AWS_DEV_ACCOUNT: ${{ secrets.AWS_DEV_ACCOUNT }}
+        CLOUDFRONT_SIGNER_PUBKEY: ${{ secrets.CLOUDFRONT_SIGNER_PUBKEY_DEV }}
       run: npm run deploy-dev
