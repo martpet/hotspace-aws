@@ -1,11 +1,11 @@
 import * as cdk from "aws-cdk-lib";
 import * as iam from "aws-cdk-lib/aws-iam";
-import { Policy } from "aws-cdk-lib/aws-iam";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import { Construct } from "constructs";
 
 export class InodesBucket extends Construct {
-  policy: Policy;
+  policy: iam.Policy;
+  bucket: s3.Bucket;
 
   constructor(scope: Construct, id: string) {
     super(scope, id);
@@ -20,7 +20,7 @@ export class InodesBucket extends Construct {
       ? ["https://hotspace.lol"]
       : ["https://hotspace.local"];
 
-    const bucket = new s3.Bucket(this, "Bucket", {
+    this.bucket = new s3.Bucket(this, "Bucket", {
       bucketName,
       enforceSSL: true,
       transferAcceleration: true,
@@ -55,7 +55,7 @@ export class InodesBucket extends Construct {
             "s3:ListBucket",
             "s3:DeleteObject",
           ],
-          resources: [bucket.bucketArn, `${bucket.bucketArn}/*`],
+          resources: [this.bucket.bucketArn, `${this.bucket.bucketArn}/*`],
         }),
       ],
     });
