@@ -14,13 +14,30 @@ export class InodesCdn extends Construct {
     const bucket = props.inodesBucket.bucket;
     const encodedKey = process.env.CLOUDFRONT_SIGNER_PUBKEY;
 
-    if (!encodedKey) throw new Error("Missing CLOUDFRONT_SIGNER_PUBKEY");
+    if (!encodedKey) {
+      throw new Error("Missing CLOUDFRONT_SIGNER_PUBKEY");
+    }
 
     const pubKey = new cloudfront.PublicKey(this, "PubKey", { encodedKey });
-
     const keyGroup = new cloudfront.KeyGroup(this, "KeyGroup", {
       items: [pubKey],
     });
+
+    const responseHeadersPolicy = new cloudfront.ResponseHeadersPolicy(
+      this,
+      "RespHeadersPolicy",
+      {
+        customHeadersBehavior: {
+          customHeaders: [
+            {
+              header: "No-Vary-Search",
+              value: "params",
+              override: false,
+            },
+          ],
+        },
+      }
+    );
 
     new cloudfront.Distribution(this, "Distribution", {
       defaultBehavior: {
@@ -29,6 +46,7 @@ export class InodesCdn extends Construct {
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
         cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD,
+        responseHeadersPolicy,
       },
     });
   }
