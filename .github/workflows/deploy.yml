@@ -41,13 +41,14 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEV }}
         aws-region: ${{ secrets.AWS_REGION }}
 
-    - name: Deploy CDK application
+    - name: Deploy to Prod
+      if: github.ref_name == 'main'
       env:
-          AWS_PROD_ACCOUNT: ${{ secrets.AWS_PROD_ACCOUNT }}
-          AWS_DEV_ACCOUNT: ${{ secrets.AWS_DEV_ACCOUNT }}
-      run: |
-        if [[ "${{ github.ref_name }}" == "main" ]]; then
-          npm run deploy-prod
-        else
-          npm run deploy-dev
-        fi
+        AWS_PROD_ACCOUNT: ${{ secrets.AWS_PROD_ACCOUNT }}
+      run: npm run deploy-prod
+
+    - name: Deploy to Dev
+      if: github.ref_name != 'main'
+      env:
+        AWS_DEV_ACCOUNT: ${{ secrets.AWS_DEV_ACCOUNT }}
+      run: npm run deploy-dev
