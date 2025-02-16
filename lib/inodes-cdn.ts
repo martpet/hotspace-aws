@@ -54,7 +54,7 @@ export class InodesCdn extends Construct {
     new cloudfront.Distribution(this, "Distribution", {
       defaultBehavior: {
         origin: origins.S3BucketOrigin.withOriginAccessControl(bucket),
-        // [Enable public access:]
+        // Uncomment to disable public access:
         // trustedKeyGroups: [keyGroup],
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
