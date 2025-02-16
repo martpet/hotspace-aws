@@ -1,9 +1,11 @@
 import * as iam from "aws-cdk-lib/aws-iam";
 import { Construct } from "constructs";
 import { InodesBucket } from "./inodes-bucket";
+import { KvBackup } from "./kv-backup";
 
 interface Props {
   inodesBucket: InodesBucket;
+  kvBackup: KvBackup;
 }
 
 export class UsersAndGroups extends Construct {
@@ -31,6 +33,12 @@ export class UsersAndGroups extends Construct {
     const denoDeployUser = new iam.User(this, "DenoDeployUser", {
       userName: "deno-deploy-user",
     });
+
+    const denoDeployKvBackupUser = new iam.User(this, "DenoDeployKvBackup", {
+      userName: "deno-deploy-kv-backup-user",
+    });
+
+    denoDeployKvBackupUser.attachInlinePolicy(props.kvBackup.policy);
 
     githubUser.addToGroup(cdkDeploymentGroup);
     denoDeployUser.addToGroup(backendGroup);
