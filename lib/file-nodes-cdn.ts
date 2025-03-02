@@ -1,0 +1,68 @@
+import * as acm from "aws-cdk-lib/aws-certificatemanager";
+import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
+import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
+import * as s3 from "aws-cdk-lib/aws-s3";
+import { Construct } from "constructs";
+import { APP_DOMAIN } from "./consts";
+
+interface Props {
+  isProd: boolean;
+  fileNodesBucket: s3.Bucket;
+}
+
+export class FileNodesCdn extends Construct {
+  constructor(scope: Construct, id: string, props: Props) {
+    super(scope, id);
+
+    const { fileNodesBucket, isProd } = props;
+
+    const encodedKey = process.env.CLOUDFRONT_SIGNER_PUBKEY;
+
+    if (!encodedKey) {
+      throw new Error("Missing CLOUDFRONT_SIGNER_PUBKEY");
+    }
+
+    const domainName = isProd
+      ? `uploads.${APP_DOMAIN}`
+      : `uploads.dev.${APP_DOMAIN}`;
+
+    const pubKey = new cloudfront.PublicKey(this, "PubKey", { encodedKey });
+    const keyGroup = new cloudfront.KeyGroup(this, "KeyGroup", {
+      items: [pubKey],
+    });
+
+    const responseHeadersPolicy = new cloudfront.ResponseHeadersPolicy(
+      this,
+      "RespHeadersPolicy",
+      {
+        customHeadersBehavior: {
+          customHeaders: [
+            {
+              header: "No-Vary-Search",
+              value: "params",
+              override: false,
+            },
+          ],
+        },
+      }
+    );
+
+    const certificate = new acm.Certificate(this, "Certificate", {
+      domainName,
+      validation: acm.CertificateValidation.fromDns(),
+    });
+
+    new cloudfront.Distribution(this, "Distribution", {
+      domainNames: [domainName],
+      certificate,
+      defaultBehavior: {
+        origin: origins.S3BucketOrigin.withOriginAccessControl(fileNodesBucket),
+        // Uncomment to disable public access:
+        // trustedKeyGroups: [keyGroup],
+        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
+        responseHeadersPolicy,
+      },
+    });
+  }
+}
