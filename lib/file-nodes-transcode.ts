@@ -48,6 +48,8 @@ export class FileNodesTranscode extends Construct {
     // Event Notification
     // =====================
 
+    const WEBHOOK_PATH = "/app/webhooks/aws-media-convert";
+
     let eventTarget;
 
     const apiKey = new secretsmanager.Secret(this, "NotificationApiKey")
@@ -63,7 +65,7 @@ export class FileNodesTranscode extends Construct {
         "BackendDestination",
         {
           connection,
-          endpoint: `https://${APP_DOMAIN}/webhooks/aws-media-convert`,
+          endpoint: `https://${APP_DOMAIN}${WEBHOOK_PATH}`,
           httpMethod: events.HttpMethod.POST,
         }
       );
@@ -76,7 +78,7 @@ export class FileNodesTranscode extends Construct {
         environment: { API_KEY: apiKey.unsafeUnwrap() },
         code: lambda.Code.fromInline(`
           exports.handler = async function(event) {
-            await fetch(event.detail.userMetadata.notificationEndpoint, {
+            await fetch(event.detail.userMetadata.appUrl + "${WEBHOOK_PATH}", {
               body: JSON.stringify(event),
               method: "post",
               headers: { 'x-api-key': process.env.API_KEY }
