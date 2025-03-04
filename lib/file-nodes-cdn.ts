@@ -4,17 +4,19 @@ import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import { Construct } from "constructs";
 import { APP_DOMAIN } from "./consts";
+import { FileNodesStorage } from "./file-nodes-storage";
 
 interface Props {
   isProd: boolean;
   fileNodesBucket: s3.Bucket;
+  fileNodesBucketCors: FileNodesStorage["bucketCors"];
 }
 
 export class FileNodesCdn extends Construct {
   constructor(scope: Construct, id: string, props: Props) {
     super(scope, id);
 
-    const { fileNodesBucket, isProd } = props;
+    const { fileNodesBucket, fileNodesBucketCors, isProd } = props;
 
     const encodedKey = process.env.CLOUDFRONT_SIGNER_PUBKEY;
 
@@ -35,6 +37,13 @@ export class FileNodesCdn extends Construct {
       this,
       "RespHeadersPolicy",
       {
+        corsBehavior: {
+          accessControlAllowCredentials: false,
+          accessControlAllowMethods: fileNodesBucketCors.allowedMethods,
+          accessControlAllowOrigins: fileNodesBucketCors.allowedOrigins,
+          accessControlAllowHeaders: fileNodesBucketCors.allowedHeaders,
+          originOverride: true,
+        },
         customHeadersBehavior: {
           customHeaders: [
             {

@@ -13,31 +13,29 @@ export class HotspaceStack extends cdk.Stack {
 
     const isProd = cdk.Stage.of(this)?.stageName === "Prod";
 
-    const { backendGroup, denoDeployKvBackupUser } = new Identity(
-      this,
-      "Identity"
-    );
+    const identity = new Identity(this, "Identity");
 
-    const { fileNodesBucket } = new FileNodesStorage(this, "FileNodesStorage", {
+    const fileNodesStorage = new FileNodesStorage(this, "FileNodesStorage", {
       isProd,
-      backendGroup,
+      backendGroup: identity.backendGroup,
     });
 
     new DenoKvBackup(this, "DenoKvBackup", {
-      denoDeployKvBackupUser,
+      denoDeployKvBackupUser: identity.denoDeployKvBackupUser,
     });
 
     if (isProd) new AssetsCdn(this, "AssetsCdn");
 
     new FileNodesCdn(this, "FileNodesCdn", {
       isProd,
-      fileNodesBucket,
+      fileNodesBucket: fileNodesStorage.bucket,
+      fileNodesBucketCors: fileNodesStorage.bucketCors,
     });
 
     new FileNodesTranscode(this, "FileNodesTranscode", {
       isProd,
-      fileNodesBucket,
-      backendGroup,
+      fileNodesBucket: fileNodesStorage.bucket,
+      backendGroup: identity.backendGroup,
     });
   }
 }

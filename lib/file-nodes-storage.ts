@@ -10,7 +10,13 @@ interface Props {
 }
 
 export class FileNodesStorage extends Construct {
-  fileNodesBucket: s3.Bucket;
+  bucket: s3.Bucket;
+  bucketCors: {
+    allowedOrigins: string[];
+    allowedHeaders: string[];
+    allowedMethods: string[];
+    exposedHeaders: string[];
+  };
 
   constructor(scope: Construct, id: string, props: Props) {
     super(scope, id);
@@ -31,7 +37,7 @@ export class FileNodesStorage extends Construct {
       ? [`https://${APP_DOMAIN}`]
       : ["https://hotspace.local"];
 
-    bucket.addCorsRule({
+    const bucketCors = {
       allowedOrigins,
       allowedHeaders: ["*"],
       allowedMethods: [
@@ -42,7 +48,9 @@ export class FileNodesStorage extends Construct {
         s3.HttpMethods.HEAD,
       ],
       exposedHeaders: ["ETag"],
-    });
+    };
+
+    bucket.addCorsRule(bucketCors);
 
     bucket.addLifecycleRule({
       abortIncompleteMultipartUploadAfter: cdk.Duration.days(1),
@@ -50,6 +58,7 @@ export class FileNodesStorage extends Construct {
 
     bucket.grantReadWrite(backendGroup);
 
-    this.fileNodesBucket = bucket;
+    this.bucket = bucket;
+    this.bucketCors = bucketCors;
   }
 }
