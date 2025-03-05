@@ -48,7 +48,7 @@ export class FileNodesTranscode extends Construct {
     // Event Notification
     // =====================
 
-    const WEBHOOK_PATH = "/app/webhooks/aws-media-convert";
+    const WEBHOOK_PATH = "/webhooks/aws-media-convert";
 
     let eventTarget;
 
