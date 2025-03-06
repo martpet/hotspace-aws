@@ -89,6 +89,15 @@ export class FileNodesTranscode extends Construct {
       eventTarget = new targets.LambdaFunction(lambdaProxy);
     }
 
+    new events.Rule(this, "ProgressEventRule", {
+      targets: [eventTarget],
+      eventPattern: {
+        source: ["aws.mediaconvert"],
+        detailType: ["MediaConvert Job State Change"],
+        detail: { status: ["STATUS_UPDATE"] },
+      },
+    });
+
     new events.Rule(this, "CompleteEventRule", {
       targets: [eventTarget],
       eventPattern: {
