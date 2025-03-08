@@ -2,7 +2,7 @@ import * as cdk from "aws-cdk-lib";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import { Construct } from "constructs";
-import { APP_DOMAIN } from "./consts";
+import { APP_DOMAIN, ASSETS_DOMAIN } from "./consts";
 
 interface Props {
   isProd: boolean;
@@ -34,7 +34,7 @@ export class FileNodesStorage extends Construct {
     });
 
     const allowedOrigins = isProd
-      ? [`https://${APP_DOMAIN}`]
+      ? [`https://${APP_DOMAIN}`, `https://${ASSETS_DOMAIN}`]
       : ["https://hotspace.local"];
 
     const bucketCors = {
