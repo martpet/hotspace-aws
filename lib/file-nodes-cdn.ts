@@ -3,7 +3,7 @@ import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import { Construct } from "constructs";
-import { APP_DOMAIN } from "./consts";
+import { APP_DOMAIN, ASSET_CACHE_PARAM } from "./consts";
 import { FileNodesStorage } from "./file-nodes-storage";
 
 interface Props {
@@ -48,8 +48,8 @@ export class FileNodesCdn extends Construct {
           customHeaders: [
             {
               header: "No-Vary-Search",
-              value: "params",
-              override: false,
+              value: `params, except=("${ASSET_CACHE_PARAM}")`,
+              override: true,
             },
           ],
         },
@@ -66,8 +66,7 @@ export class FileNodesCdn extends Construct {
       certificate,
       defaultBehavior: {
         origin: origins.S3BucketOrigin.withOriginAccessControl(fileNodesBucket),
-        // Uncomment to disable public access:
-        // trustedKeyGroups: [keyGroup],
+        trustedKeyGroups: [keyGroup],
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
         responseHeadersPolicy,
