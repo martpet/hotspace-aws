@@ -47,7 +47,7 @@ export class FileNodesCdn extends Construct {
         customHeadersBehavior: {
           customHeaders: [
             {
-              header: "No-Vary-Search",
+              header: "No-Vary-Search", // https://chromestatus.com/feature/5808599110254592
               value: `params, except=("${ASSET_CACHE_PARAM}")`,
               override: true,
             },
