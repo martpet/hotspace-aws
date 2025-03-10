@@ -66,7 +66,7 @@ export class FileNodesCdn extends Construct {
       certificate,
       defaultBehavior: {
         origin: origins.S3BucketOrigin.withOriginAccessControl(fileNodesBucket),
-        trustedKeyGroups: [keyGroup],
+        // trustedKeyGroups: [keyGroup],
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
         responseHeadersPolicy,
