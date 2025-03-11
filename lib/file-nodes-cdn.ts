@@ -1,3 +1,4 @@
+import * as cdk from "aws-cdk-lib";
 import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
@@ -17,7 +18,7 @@ export class FileNodesCdn extends Construct {
     super(scope, id);
 
     const { fileNodesBucket, fileNodesBucketCors, isProd } = props;
-
+    const oneYearSeconds = cdk.Duration.days(356).toSeconds();
     const encodedKey = process.env.CLOUDFRONT_SIGNER_PUBKEY;
 
     if (!encodedKey) {
@@ -46,6 +47,11 @@ export class FileNodesCdn extends Construct {
         },
         customHeadersBehavior: {
           customHeaders: [
+            {
+              header: "Cache-Control",
+              value: `public, max-age=31536000, immutable`,
+              override: true,
+            },
             {
               header: "No-Vary-Search", // https://chromestatus.com/feature/5808599110254592
               value: "params",
