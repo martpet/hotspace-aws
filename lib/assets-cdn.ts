@@ -3,7 +3,7 @@ import * as acm from "aws-cdk-lib/aws-certificatemanager";
 import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
 import { Construct } from "constructs";
-import { APP_DOMAIN } from "./consts";
+import { APP_DOMAIN, ASSET_CACHE_PARAM } from "./consts";
 
 export class AssetsCdn extends Construct {
   constructor(scope: Construct, id: string) {
@@ -38,7 +38,8 @@ export class AssetsCdn extends Construct {
     );
 
     const cachePolicy = new cloudfront.CachePolicy(this, "CachePolicy", {
-      queryStringBehavior: cloudfront.CacheQueryStringBehavior.all(),
+      queryStringBehavior:
+        cloudfront.CacheQueryStringBehavior.allowList(ASSET_CACHE_PARAM),
       enableAcceptEncodingBrotli: true,
     });
 
