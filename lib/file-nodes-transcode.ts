@@ -78,11 +78,12 @@ export class FileNodesTranscode extends Construct {
         environment: { API_KEY: apiKey.unsafeUnwrap() },
         code: lambda.Code.fromInline(`
           exports.handler = async function(event) {
-            await fetch(event.detail.userMetadata.appUrl + "${WEBHOOK_PATH}", {
+            const resp = await fetch(event.detail.userMetadata.appUrl + "${WEBHOOK_PATH}", {
               body: JSON.stringify(event),
               method: "post",
               headers: { 'x-api-key': process.env.API_KEY }
             })
+            if (resp.status >= 500) throw new Error();
           };
         `),
       });
