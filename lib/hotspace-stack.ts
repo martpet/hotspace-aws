@@ -1,7 +1,7 @@
 import * as cdk from "aws-cdk-lib";
 import { Construct } from "constructs";
+import { AppBudget } from "./app-budget";
 import { AssetsCdn } from "./assets-cdn";
-import { BudgetAlert } from "./budget_alert";
 import { DenoKvBackup } from "./deno-kv-backup";
 import { FileNodesCdn } from "./file-nodes-cdn";
 import { FileNodesStorage } from "./file-nodes-storage";
@@ -19,7 +19,7 @@ export class HotspaceStack extends cdk.Stack {
 
     const webhook = new Webhook(this, "Webhook");
 
-    new BudgetAlert(this, "BudgetAlert", {
+    new AppBudget(this, "AppBudget", {
       isProd,
       webhookDestination: webhook.destination,
     });

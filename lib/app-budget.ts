@@ -9,7 +9,7 @@ interface Props {
   webhookDestination: events.ApiDestination;
 }
 
-export class BudgetAlert extends Construct {
+export class AppBudget extends Construct {
   constructor(scope: Construct, id: string, props: Props) {
     super(scope, id);
 
@@ -26,18 +26,15 @@ export class BudgetAlert extends Construct {
         targets: [webhookTarget],
         eventPattern: {
           source: ["aws.budgets"],
-          detailType: ["AWS Budget Notification"],
+          detailType: ["AWS API Call via CloudTrail"],
+          detail: {
+            eventSource: ["budgets.amazonaws.com"],
+          },
         },
       });
     }
 
     const budgetTopic = new sns.Topic(this, "Topic");
-
-    new sns.Subscription(this, "EmailSub", {
-      topic: budgetTopic,
-      protocol: sns.SubscriptionProtocol.EMAIL,
-      endpoint: email,
-    });
 
     new sns.Subscription(this, "SMSSub", {
       topic: budgetTopic,
@@ -67,6 +64,10 @@ export class BudgetAlert extends Construct {
             {
               subscriptionType: "SNS",
               address: budgetTopic.topicArn,
+            },
+            {
+              subscriptionType: "EMAIL",
+              address: email,
             },
           ],
         },
