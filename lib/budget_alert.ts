@@ -47,6 +47,7 @@ export class BudgetAlert extends Construct {
 
     new budgets.CfnBudget(this, "Budget", {
       budget: {
+        budgetName: "AppBudget",
         budgetLimit: {
           amount: 50,
           unit: "USD",
