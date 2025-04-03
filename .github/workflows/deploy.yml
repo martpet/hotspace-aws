@@ -45,10 +45,14 @@ jobs:
       if: github.ref_name == 'main'
       env:
         CLOUDFRONT_SIGNER_PUBKEY: ${{ secrets.CLOUDFRONT_SIGNER_PUBKEY_PROD }}
+        ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+        ADMIN_PHONE: ${{ secrets.ADMIN_PHONE }}
       run: npm run deploy-prod
 
     - name: Deploy to Dev
       if: github.ref_name != 'main'
       env:
         CLOUDFRONT_SIGNER_PUBKEY: ${{ secrets.CLOUDFRONT_SIGNER_PUBKEY_DEV }}
+        ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+        ADMIN_PHONE: ${{ secrets.ADMIN_PHONE }}
       run: npm run deploy-dev

@@ -1,6 +1,7 @@
 import * as cdk from "aws-cdk-lib";
 import { Construct } from "constructs";
 import { AssetsCdn } from "./assets-cdn";
+import { BudgetAlert } from "./budget_alert";
 import { DenoKvBackup } from "./deno-kv-backup";
 import { FileNodesCdn } from "./file-nodes-cdn";
 import { FileNodesStorage } from "./file-nodes-storage";
@@ -18,6 +19,11 @@ export class HotspaceStack extends cdk.Stack {
 
     const webhook = new Webhook(this, "Webhook");
 
+    new BudgetAlert(this, "BudgetAlert", {
+      isProd,
+      webhookDestination: webhook.destination,
+    });
+
     const fileNodesStorage = new FileNodesStorage(this, "FileNodesStorage", {
       isProd,
       backendGroup: identity.backendGroup,
@@ -27,7 +33,9 @@ export class HotspaceStack extends cdk.Stack {
       denoDeployKvBackupUser: identity.denoDeployKvBackupUser,
     });
 
-    if (isProd) new AssetsCdn(this, "AssetsCdn");
+    if (isProd) {
+      new AssetsCdn(this, "AssetsCdn");
+    }
 
     new FileNodesCdn(this, "FileNodesCdn", {
       isProd,
