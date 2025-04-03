@@ -1,4 +1,5 @@
 import * as cdk from "aws-cdk-lib";
+import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager";
 import { Construct } from "constructs";
 import { AssetsCdn } from "./assets-cdn";
 import { DenoKvBackup } from "./deno-kv-backup";
@@ -12,6 +13,8 @@ export class HotspaceStack extends cdk.Stack {
     super(scope, id);
 
     const isProd = cdk.Stage.of(this)?.stageName === "Prod";
+
+    const webhookSecret = new secretsmanager.Secret(this, "NotificationApiKey");
 
     const identity = new Identity(this, "Identity");
 
@@ -36,6 +39,7 @@ export class HotspaceStack extends cdk.Stack {
       isProd,
       fileNodesBucket: fileNodesStorage.bucket,
       backendGroup: identity.backendGroup,
+      webhookSecretValue: webhookSecret.secretValue,
     });
   }
 }

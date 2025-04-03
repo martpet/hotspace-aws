@@ -1,10 +1,9 @@
-import { Stack } from "aws-cdk-lib";
+import { SecretValue, Stack } from "aws-cdk-lib";
 import * as events from "aws-cdk-lib/aws-events";
 import * as targets from "aws-cdk-lib/aws-events-targets";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as s3 from "aws-cdk-lib/aws-s3";
-import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager";
 import { Construct } from "constructs";
 import { APP_DOMAIN } from "./consts";
 
@@ -12,6 +11,7 @@ interface Props {
   isProd: boolean;
   fileNodesBucket: s3.Bucket;
   backendGroup: iam.Group;
+  webhookSecretValue: SecretValue;
 }
 
 export class FileNodesTranscode extends Construct {
@@ -20,7 +20,7 @@ export class FileNodesTranscode extends Construct {
   constructor(scope: Construct, id: string, props: Props) {
     super(scope, id);
 
-    const { isProd, fileNodesBucket, backendGroup } = props;
+    const { isProd, fileNodesBucket, backendGroup, webhookSecretValue } = props;
     const { region, account } = Stack.of(this);
 
     backendGroup.addToPolicy(
@@ -52,12 +52,12 @@ export class FileNodesTranscode extends Construct {
 
     let eventTarget;
 
-    const apiKey = new secretsmanager.Secret(this, "NotificationApiKey")
-      .secretValue;
-
     if (isProd) {
       const connection = new events.Connection(this, "BackendConnection", {
-        authorization: events.Authorization.apiKey("x-api-key", apiKey),
+        authorization: events.Authorization.apiKey(
+          "x-api-key",
+          webhookSecretValue
+        ),
       });
 
       const destination = new events.ApiDestination(
@@ -75,7 +75,7 @@ export class FileNodesTranscode extends Construct {
       const lambdaProxy = new lambda.Function(this, "NotificationLambdaProxy", {
         runtime: lambda.Runtime.NODEJS_18_X,
         handler: "index.handler",
-        environment: { API_KEY: apiKey.unsafeUnwrap() },
+        environment: { API_KEY: webhookSecretValue.unsafeUnwrap() },
         code: lambda.Code.fromInline(`
           exports.handler = async function(event) {
             const resp = await fetch(event.detail.userMetadata.devUrl + "${WEBHOOK_PATH}", {
