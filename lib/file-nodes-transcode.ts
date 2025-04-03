@@ -5,7 +5,7 @@ import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import { Construct } from "constructs";
-import { APP_DOMAIN } from "./consts";
+import { APP_DOMAIN, WEBHOOKS_PATH } from "./consts";
 
 interface Props {
   isProd: boolean;
@@ -49,8 +49,6 @@ export class FileNodesTranscode extends Construct {
     // Event Notification
     // =====================
 
-    const WEBHOOK_PATH = "/webhooks/aws-media-convert";
-
     let eventTarget;
 
     if (isProd) {
@@ -66,7 +64,7 @@ export class FileNodesTranscode extends Construct {
         "BackendDestination",
         {
           connection,
-          endpoint: `https://${APP_DOMAIN}${WEBHOOK_PATH}`,
+          endpoint: `https://${APP_DOMAIN}${WEBHOOKS_PATH}`,
           httpMethod: events.HttpMethod.POST,
         }
       );
@@ -79,7 +77,7 @@ export class FileNodesTranscode extends Construct {
         environment: { API_KEY: webhooksSecretValue.unsafeUnwrap() },
         code: lambda.Code.fromInline(`
           exports.handler = async function(event) {
-            const resp = await fetch(event.detail.userMetadata.devUrl + "${WEBHOOK_PATH}", {
+            const resp = await fetch(event.detail.userMetadata.devUrl + "${WEBHOOKS_PATH}", {
               body: JSON.stringify(event),
               method: "post",
               headers: { 'x-api-key': process.env.API_KEY }
