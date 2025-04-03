@@ -11,7 +11,7 @@ interface Props {
   isProd: boolean;
   fileNodesBucket: s3.Bucket;
   backendGroup: iam.Group;
-  webhookSecretValue: SecretValue;
+  webhooksSecretValue: SecretValue;
 }
 
 export class FileNodesTranscode extends Construct {
@@ -20,7 +20,8 @@ export class FileNodesTranscode extends Construct {
   constructor(scope: Construct, id: string, props: Props) {
     super(scope, id);
 
-    const { isProd, fileNodesBucket, backendGroup, webhookSecretValue } = props;
+    const { isProd, fileNodesBucket, backendGroup, webhooksSecretValue } =
+      props;
     const { region, account } = Stack.of(this);
 
     backendGroup.addToPolicy(
@@ -56,7 +57,7 @@ export class FileNodesTranscode extends Construct {
       const connection = new events.Connection(this, "BackendConnection", {
         authorization: events.Authorization.apiKey(
           "x-api-key",
-          webhookSecretValue
+          webhooksSecretValue
         ),
       });
 
@@ -75,7 +76,7 @@ export class FileNodesTranscode extends Construct {
       const lambdaProxy = new lambda.Function(this, "NotificationLambdaProxy", {
         runtime: lambda.Runtime.NODEJS_18_X,
         handler: "index.handler",
-        environment: { API_KEY: webhookSecretValue.unsafeUnwrap() },
+        environment: { API_KEY: webhooksSecretValue.unsafeUnwrap() },
         code: lambda.Code.fromInline(`
           exports.handler = async function(event) {
             const resp = await fetch(event.detail.userMetadata.devUrl + "${WEBHOOK_PATH}", {

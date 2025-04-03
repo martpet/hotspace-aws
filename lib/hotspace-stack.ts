@@ -14,7 +14,7 @@ export class HotspaceStack extends cdk.Stack {
 
     const isProd = cdk.Stage.of(this)?.stageName === "Prod";
 
-    const webhookSecret = new secretsmanager.Secret(this, "NotificationApiKey");
+    const webhooksSecret = new secretsmanager.Secret(this, "WebhooksApiKey");
 
     const identity = new Identity(this, "Identity");
 
@@ -39,7 +39,7 @@ export class HotspaceStack extends cdk.Stack {
       isProd,
       fileNodesBucket: fileNodesStorage.bucket,
       backendGroup: identity.backendGroup,
-      webhookSecretValue: webhookSecret.secretValue,
+      webhooksSecretValue: webhooksSecret.secretValue,
     });
   }
 }
