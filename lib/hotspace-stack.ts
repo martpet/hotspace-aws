@@ -1,6 +1,5 @@
 import * as cdk from "aws-cdk-lib";
 import { Construct } from "constructs";
-import { AppBudget } from "./app-budget";
 import { AssetsCdn } from "./assets-cdn";
 import { DenoKvBackup } from "./deno-kv-backup";
 import { FileNodesCdn } from "./file-nodes-cdn";
@@ -18,11 +17,6 @@ export class HotspaceStack extends cdk.Stack {
     const identity = new Identity(this, "Identity");
 
     const webhook = new Webhook(this, "Webhook");
-
-    new AppBudget(this, "AppBudget", {
-      isProd,
-      webhookDestination: webhook.destination,
-    });
 
     const fileNodesStorage = new FileNodesStorage(this, "FileNodesStorage", {
       isProd,
