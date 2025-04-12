@@ -63,7 +63,7 @@ export class FileNodesTranscode extends Construct {
         environment: { API_KEY: webhookSecret.secretValue.unsafeUnwrap() },
         code: lambda.Code.fromInline(`
           exports.handler = async function(event) {
-            const resp = await fetch(event.detail.userMetadata.devUrl + "${WEBHOOKS_PATH}", {
+            const resp = await fetch(event.detail.userMetadata.devAppUrl + "${WEBHOOKS_PATH}", {
               body: JSON.stringify(event),
               method: "post",
               headers: { 'x-api-key': process.env.API_KEY }
