@@ -1,15 +1,21 @@
 import * as events from "aws-cdk-lib/aws-events";
+import * as targets from "aws-cdk-lib/aws-events-targets";
+import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager";
 import { Construct } from "constructs";
 import { APP_DOMAIN, WEBHOOKS_PATH } from "./consts";
 
-export class Webhook extends Construct {
-  destination: events.ApiDestination;
-  secret: secretsmanager.Secret;
+interface Props {
+  isProd: boolean;
+}
 
-  constructor(scope: Construct, id: string) {
+export class Webhook extends Construct {
+  eventTarget: events.IRuleTarget;
+
+  constructor(scope: Construct, id: string, props: Props) {
     super(scope, id);
 
+    const { isProd } = props;
     const secret = new secretsmanager.Secret(this, "Secret");
 
     const connection = new events.Connection(this, "Connection", {
@@ -25,7 +31,32 @@ export class Webhook extends Construct {
       httpMethod: events.HttpMethod.POST,
     });
 
-    this.destination = destination;
-    this.secret = secret;
+    let eventTarget;
+
+    if (isProd) {
+      eventTarget = new targets.ApiDestination(destination);
+    } else {
+      const fn = new lambda.Function(this, "LambdaProxy", {
+        runtime: lambda.Runtime.NODEJS_18_X,
+        handler: "index.handler",
+        environment: { API_KEY: secret.secretValue.unsafeUnwrap() },
+        code: lambda.Code.fromInline(`
+          exports.handler = async function(event) {
+            const devAppUrl = event.detail.devAppUrl || event.detail.userMetadata?.devAppUrl;
+            const resp = await fetch(devAppUrl + "${WEBHOOKS_PATH}", {
+              body: JSON.stringify(event),
+              method: "post",
+              headers: { 'x-api-key': process.env.API_KEY }
+            })
+            if (!resp.ok) {
+              throw new Error('response status', resp.status)
+            };
+          };
+        `),
+      });
+      eventTarget = new targets.LambdaFunction(fn);
+    }
+
+    this.eventTarget = eventTarget;
   }
 }

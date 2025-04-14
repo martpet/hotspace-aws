@@ -1,4 +1,5 @@
 import * as cdk from "aws-cdk-lib";
+import * as events from "aws-cdk-lib/aws-events";
 import { Construct } from "constructs";
 import { AssetsCdn } from "./assets-cdn";
 import { DenoKvBackup } from "./deno-kv-backup";
@@ -6,6 +7,7 @@ import { FileNodesCdn } from "./file-nodes-cdn";
 import { FileNodesStorage } from "./file-nodes-storage";
 import { FileNodesTranscode } from "./file-nodes-transcode";
 import { Identity } from "./identity";
+import { ImageProcessing } from "./image-processing/image-processing";
 import { Webhook } from "./webhook";
 
 export class HotspaceStack extends cdk.Stack {
@@ -16,7 +18,11 @@ export class HotspaceStack extends cdk.Stack {
 
     const identity = new Identity(this, "Identity");
 
-    const webhook = new Webhook(this, "Webhook");
+    const appEventBus = new events.EventBus(this, "AppEventBus");
+
+    const webhook = new Webhook(this, "Webhook", {
+      isProd,
+    });
 
     const fileNodesStorage = new FileNodesStorage(this, "FileNodesStorage", {
       isProd,
@@ -38,11 +44,16 @@ export class HotspaceStack extends cdk.Stack {
     });
 
     new FileNodesTranscode(this, "FileNodesTranscode", {
-      isProd,
       fileNodesBucket: fileNodesStorage.bucket,
+      webhookEventTarget: webhook.eventTarget,
       backendGroup: identity.backendGroup,
-      webhookDestination: webhook.destination,
-      webhookSecret: webhook.secret,
+    });
+
+    new ImageProcessing(this, "ImageProcessing", {
+      fileNodesBucket: fileNodesStorage.bucket,
+      appEventBus,
+      webhookEventTarget: webhook.eventTarget,
+      backendGroup: identity.backendGroup,
     });
   }
 }

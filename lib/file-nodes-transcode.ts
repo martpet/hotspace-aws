@@ -1,19 +1,13 @@
 import { Stack } from "aws-cdk-lib";
 import * as events from "aws-cdk-lib/aws-events";
-import * as targets from "aws-cdk-lib/aws-events-targets";
 import * as iam from "aws-cdk-lib/aws-iam";
-import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as s3 from "aws-cdk-lib/aws-s3";
-import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager";
 import { Construct } from "constructs";
-import { WEBHOOKS_PATH } from "./consts";
 
 interface Props {
-  isProd: boolean;
   fileNodesBucket: s3.Bucket;
+  webhookEventTarget: events.IRuleTarget;
   backendGroup: iam.Group;
-  webhookDestination: events.ApiDestination;
-  webhookSecret: secretsmanager.Secret;
 }
 
 export class FileNodesTranscode extends Construct {
@@ -22,13 +16,7 @@ export class FileNodesTranscode extends Construct {
   constructor(scope: Construct, id: string, props: Props) {
     super(scope, id);
 
-    const {
-      isProd,
-      fileNodesBucket,
-      backendGroup,
-      webhookDestination,
-      webhookSecret,
-    } = props;
+    const { webhookEventTarget, fileNodesBucket, backendGroup } = props;
     const { region, account } = Stack.of(this);
 
     backendGroup.addToPolicy(
@@ -52,31 +40,8 @@ export class FileNodesTranscode extends Construct {
     mediaConvertRole.grantPassRole(backendGroup);
     fileNodesBucket.grantReadWrite(mediaConvertRole);
 
-    let eventTarget;
-
-    if (isProd) {
-      eventTarget = new targets.ApiDestination(webhookDestination);
-    } else {
-      const lambdaProxy = new lambda.Function(this, "NotificationLambdaProxy", {
-        runtime: lambda.Runtime.NODEJS_18_X,
-        handler: "index.handler",
-        environment: { API_KEY: webhookSecret.secretValue.unsafeUnwrap() },
-        code: lambda.Code.fromInline(`
-          exports.handler = async function(event) {
-            const resp = await fetch(event.detail.userMetadata.devAppUrl + "${WEBHOOKS_PATH}", {
-              body: JSON.stringify(event),
-              method: "post",
-              headers: { 'x-api-key': process.env.API_KEY }
-            })
-            if (resp.status >= 500) throw new Error();
-          };
-        `),
-      });
-      eventTarget = new targets.LambdaFunction(lambdaProxy);
-    }
-
     new events.Rule(this, "ProgressEventRule", {
-      targets: [eventTarget],
+      targets: [webhookEventTarget],
       eventPattern: {
         source: ["aws.mediaconvert"],
         detailType: ["MediaConvert Job State Change"],
@@ -85,7 +50,7 @@ export class FileNodesTranscode extends Construct {
     });
 
     new events.Rule(this, "CompleteEventRule", {
-      targets: [eventTarget],
+      targets: [webhookEventTarget],
       eventPattern: {
         source: ["aws.mediaconvert"],
         detailType: ["MediaConvert Job State Change"],
@@ -94,7 +59,7 @@ export class FileNodesTranscode extends Construct {
     });
 
     new events.Rule(this, "ErrorEventRule", {
-      targets: [eventTarget],
+      targets: [webhookEventTarget],
       eventPattern: {
         source: ["aws.mediaconvert"],
         detailType: ["MediaConvert Job State Change"],
