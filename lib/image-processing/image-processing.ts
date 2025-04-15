@@ -8,7 +8,8 @@ import * as sqs from "aws-cdk-lib/aws-sqs";
 import { Construct } from "constructs";
 import * as path from "path";
 
-export const IMAGE_PROCESSING_EVENT_SOURCE = "hotspace.image-processing";
+const IMAGE_PROCESSING_EVENT_SOURCE = "hotspace.image-processing";
+const SQS_QUEUE_MAX_RECEIVE_COUNT = 3;
 
 interface Props {
   fileNodesBucket: s3.Bucket;
@@ -29,10 +30,10 @@ export class ImageProcessing extends Construct {
     });
 
     const queue = new sqs.Queue(this, "Queue", {
-      visibilityTimeout: cdk.Duration.minutes(2),
+      visibilityTimeout: cdk.Duration.minutes(1.5),
       deadLetterQueue: {
         queue: deadLetterQueue,
-        maxReceiveCount: 3,
+        maxReceiveCount: SQS_QUEUE_MAX_RECEIVE_COUNT,
       },
     });
 
@@ -52,6 +53,7 @@ export class ImageProcessing extends Construct {
         BUCKET_NAME: fileNodesBucket.bucketName,
         EVENT_BUS_NAME: appEventBus.eventBusName,
         IMAGE_PROCESSING_EVENT_SOURCE,
+        SQS_QUEUE_MAX_RECEIVE_COUNT: SQS_QUEUE_MAX_RECEIVE_COUNT.toString(),
       },
     });
 
