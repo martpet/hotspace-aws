@@ -5,9 +5,9 @@ import { AssetsCdn } from "./assets-cdn";
 import { DenoKvBackup } from "./deno-kv-backup";
 import { FileNodesCdn } from "./file-nodes-cdn";
 import { FileNodesStorage } from "./file-nodes-storage";
-import { FileNodesTranscode } from "./file-nodes-transcode";
 import { Identity } from "./identity";
 import { ImageProcessing } from "./image-processing/image-processing";
+import { VideoProcessing } from "./video-processing";
 import { Webhook } from "./webhook";
 
 export class HotspaceStack extends cdk.Stack {
@@ -43,7 +43,7 @@ export class HotspaceStack extends cdk.Stack {
       fileNodesBucketCors: fileNodesStorage.bucketCors,
     });
 
-    new FileNodesTranscode(this, "FileNodesTranscode", {
+    new VideoProcessing(this, "VideoProcessing", {
       fileNodesBucket: fileNodesStorage.bucket,
       webhookEventTarget: webhook.eventTarget,
       backendGroup: identity.backendGroup,
