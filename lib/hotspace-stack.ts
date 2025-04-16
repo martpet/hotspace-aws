@@ -1,12 +1,13 @@
 import * as cdk from "aws-cdk-lib";
 import * as events from "aws-cdk-lib/aws-events";
 import { Construct } from "constructs";
+import * as path from "path";
 import { AssetsCdn } from "./assets-cdn";
 import { DenoKvBackup } from "./deno-kv-backup";
 import { FileNodesCdn } from "./file-nodes-cdn";
 import { FileNodesStorage } from "./file-nodes-storage";
 import { Identity } from "./identity";
-import { ImageProcessing } from "./image-processing/image-processing";
+import { MediaProcessor } from "./media-processor";
 import { VideoProcessing } from "./video-processing";
 import { Webhook } from "./webhook";
 
@@ -49,10 +50,19 @@ export class HotspaceStack extends cdk.Stack {
       backendGroup: identity.backendGroup,
     });
 
-    new ImageProcessing(this, "ImageProcessing", {
-      fileNodesBucket: fileNodesStorage.bucket,
-      appEventBus,
-      webhookEventTarget: webhook.eventTarget,
+    new MediaProcessor(this, "ImageProcessor", {
+      lambdaPath: path.join(__dirname, "/image-processor/lambda"),
+      lambdaLayerPath: path.join(
+        __dirname,
+        "/image-processor/lambda-layer.zip"
+      ),
+      lambdaMemorySize: 2048,
+      lambdaTimeout: 1,
+      sqsVisibilityTimeout: 1.5,
+      eventSource: "hotspace.image-processor",
+      eventRuleTarget: webhook.eventTarget,
+      eventBus: appEventBus,
+      bucket: fileNodesStorage.bucket,
       backendGroup: identity.backendGroup,
     });
   }
