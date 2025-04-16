@@ -8,7 +8,7 @@ import { FileNodesCdn } from "./file-nodes-cdn";
 import { FileNodesStorage } from "./file-nodes-storage";
 import { Identity } from "./identity";
 import { MediaProcessor } from "./media-processor";
-import { VideoProcessing } from "./video-processing";
+import { VideoProcessor } from "./video-processor";
 import { Webhook } from "./webhook";
 
 export class HotspaceStack extends cdk.Stack {
@@ -44,7 +44,7 @@ export class HotspaceStack extends cdk.Stack {
       fileNodesBucketCors: fileNodesStorage.bucketCors,
     });
 
-    new VideoProcessing(this, "VideoProcessing", {
+    new VideoProcessor(this, "VideoProcessor", {
       fileNodesBucket: fileNodesStorage.bucket,
       webhookEventTarget: webhook.eventTarget,
       backendGroup: identity.backendGroup,

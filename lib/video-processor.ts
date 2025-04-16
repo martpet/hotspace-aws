@@ -10,7 +10,7 @@ interface Props {
   backendGroup: iam.Group;
 }
 
-export class VideoProcessing extends Construct {
+export class VideoProcessor extends Construct {
   policy: iam.Policy;
 
   constructor(scope: Construct, id: string, props: Props) {
