@@ -18,7 +18,7 @@ export class AssetsCdn extends Construct {
     });
 
     const httpOrigin = new origins.HttpOrigin(originDomainName, {
-      originPath: "/static",
+      originPath: "/assets",
     });
 
     const responseHeadersPolicy = new cloudfront.ResponseHeadersPolicy(
