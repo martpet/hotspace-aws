@@ -9,18 +9,28 @@ import { Construct } from "constructs";
 
 const SQS_QUEUE_MAX_RECEIVE_COUNT = 3;
 
-interface Props {
-  lambdaPath: string;
-  lambdaLayerPath: string;
+type Props = {
   lambdaMemorySize: number;
   lambdaTimeout: number;
+  lambdaEphemeralStorageSize?: number;
   sqsVisibilityTimeout: number;
   eventSource: string;
   eventRuleTarget: events.IRuleTarget;
   eventBus: cdk.aws_events.EventBus;
   bucket: s3.Bucket;
   backendGroup: iam.Group;
-}
+} & (
+  | {
+      lambdaPath: string;
+      lambdaLayerPath: string;
+      lambdaDockerPath?: never;
+    }
+  | {
+      lambdaPath?: never;
+      lambdaLayerPath?: never;
+      lambdaDockerPath: string;
+    }
+);
 
 export class MediaProcessor extends Construct {
   constructor(scope: Construct, id: string, props: Props) {
@@ -29,7 +39,9 @@ export class MediaProcessor extends Construct {
     const {
       lambdaPath,
       lambdaLayerPath,
+      lambdaDockerPath,
       lambdaMemorySize,
+      lambdaEphemeralStorageSize,
       lambdaTimeout,
       sqsVisibilityTimeout,
       eventBus,
@@ -51,17 +63,13 @@ export class MediaProcessor extends Construct {
       },
     });
 
-    const lambdaLayer = new lambda.LayerVersion(this, "LambdaLayer", {
-      code: lambda.Code.fromAsset(lambdaLayerPath),
-    });
+    let lambdaFn;
 
-    const fn = new lambda.Function(this, "Lambda", {
+    const lambdaProps = {
       runtime: lambda.Runtime.NODEJS_22_X,
-      handler: "index.handler",
-      code: lambda.Code.fromAsset(lambdaPath),
-      layers: [lambdaLayer],
       timeout: cdk.Duration.minutes(lambdaTimeout),
       memorySize: lambdaMemorySize,
+      lambdaEphemeralStorageSize,
       events: [new lambdaEventSources.SqsEventSource(queue, { batchSize: 1 })],
       environment: {
         SQS_QUEUE_MAX_RECEIVE_COUNT: SQS_QUEUE_MAX_RECEIVE_COUNT.toString(),
@@ -69,7 +77,24 @@ export class MediaProcessor extends Construct {
         EVENT_BUS_NAME: eventBus.eventBusName,
         EVENT_SOURCE: eventSource,
       },
-    });
+    };
+
+    if (lambdaPath) {
+      const lambdaLayer = new lambda.LayerVersion(this, "LambdaLayer", {
+        code: lambda.Code.fromAsset(lambdaLayerPath),
+      });
+      lambdaFn = new lambda.Function(this, "Lambda", {
+        ...lambdaProps,
+        handler: "index.handler",
+        code: lambda.Code.fromAsset(lambdaPath),
+        layers: [lambdaLayer],
+      });
+    } else {
+      lambdaFn = new lambda.DockerImageFunction(this, "Lambda", {
+        ...lambdaProps,
+        code: lambda.DockerImageCode.fromImageAsset(lambdaDockerPath!),
+      });
+    }
 
     new events.Rule(this, "EventRule", {
       targets: [eventRuleTarget],
@@ -80,7 +105,7 @@ export class MediaProcessor extends Construct {
     });
 
     queue.grantSendMessages(backendGroup);
-    bucket.grantReadWrite(fn);
-    eventBus.grantPutEventsTo(fn);
+    bucket.grantReadWrite(lambdaFn);
+    eventBus.grantPutEventsTo(lambdaFn);
   }
 }

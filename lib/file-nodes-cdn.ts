@@ -6,6 +6,8 @@ import { Construct } from "constructs";
 import { APP_DOMAIN } from "./consts";
 import { FileNodesStorage } from "./file-nodes-storage";
 
+const DOWNLOAD_URL_PARAM = "download";
+
 interface Props {
   isProd: boolean;
   fileNodesBucket: s3.Bucket;
@@ -52,13 +54,38 @@ export class FileNodesCdn extends Construct {
             },
             {
               header: "No-Vary-Search", // https://chromestatus.com/feature/5808599110254592
-              value: "params",
+              value: `params, except=("${DOWNLOAD_URL_PARAM}")`,
               override: true,
             },
           ],
         },
       }
     );
+
+    const cachePolicy = new cloudfront.CachePolicy(this, "CachePolicy", {
+      queryStringBehavior:
+        cloudfront.CacheQueryStringBehavior.allowList(DOWNLOAD_URL_PARAM),
+      enableAcceptEncodingBrotli: true,
+    });
+
+    const fn = new cloudfront.Function(this, "Function", {
+      runtime: cloudfront.FunctionRuntime.JS_2_0,
+      code: cloudfront.FunctionCode.fromInline(`
+        function handler(event) {
+          var req = event.request;
+          var resp = event.response;
+          var isDownload = req.querystring.${DOWNLOAD_URL_PARAM} && req.querystring.${DOWNLOAD_URL_PARAM}.value;
+          if (isDownload) {
+            var headers = resp.headers;
+            var cdHeader = headers["content-disposition"] && headers["content-disposition"].value;
+            if (cdHeader) {
+              headers["content-disposition"].value = cdHeader.replace("inline", "attachment");
+            }
+          }
+          return resp;
+        }
+      `),
+    });
 
     const certificate = new acm.Certificate(this, "Certificate", {
       domainName,
@@ -74,6 +101,13 @@ export class FileNodesCdn extends Construct {
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
         responseHeadersPolicy,
+        cachePolicy,
+        functionAssociations: [
+          {
+            function: fn,
+            eventType: cloudfront.FunctionEventType.VIEWER_RESPONSE,
+          },
+        ],
       },
     });
   }

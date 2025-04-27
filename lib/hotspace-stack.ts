@@ -65,5 +65,18 @@ export class HotspaceStack extends cdk.Stack {
       bucket: fileNodesStorage.bucket,
       backendGroup: identity.backendGroup,
     });
+
+    new MediaProcessor(this, "LibreProcessor", {
+      lambdaDockerPath: path.join(__dirname, "/libre-processor"),
+      lambdaMemorySize: 3000,
+      lambdaEphemeralStorageSize: 1000,
+      lambdaTimeout: 1.5,
+      sqsVisibilityTimeout: 2,
+      eventSource: "hotspace.libre-processor",
+      eventRuleTarget: webhook.eventTarget,
+      eventBus: appEventBus,
+      bucket: fileNodesStorage.bucket,
+      backendGroup: identity.backendGroup,
+    });
   }
 }
