@@ -51,10 +51,10 @@ export class HotspaceStack extends cdk.Stack {
     });
 
     new MediaProcessor(this, "SharpProcessor", {
-      lambdaPath: path.join(__dirname, "/sharp-processor/lambda"),
+      lambdaPath: path.join(__dirname, "/media-processors/sharp/lambda"),
       lambdaLayerPath: path.join(
         __dirname,
-        "/sharp-processor/lambda-layer.zip"
+        "/media-processors/sharp/lambda-layer.zip"
       ),
       lambdaMemorySize: 2048,
       lambdaTimeout: 1,
@@ -67,7 +67,7 @@ export class HotspaceStack extends cdk.Stack {
     });
 
     new MediaProcessor(this, "LibreProcessor", {
-      lambdaDockerPath: path.join(__dirname, "/libre-processor"),
+      lambdaDockerPath: path.join(__dirname, "/media-processors/libre"),
       lambdaMemorySize: 3000,
       lambdaEphemeralStorageSize: 1000,
       lambdaTimeout: 1.5,
