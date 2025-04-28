@@ -50,16 +50,16 @@ export class HotspaceStack extends cdk.Stack {
       backendGroup: identity.backendGroup,
     });
 
-    new MediaProcessor(this, "ImageProcessor", {
-      lambdaPath: path.join(__dirname, "/image-processor/lambda"),
+    new MediaProcessor(this, "SharpProcessor", {
+      lambdaPath: path.join(__dirname, "/sharp-processor/lambda"),
       lambdaLayerPath: path.join(
         __dirname,
-        "/image-processor/lambda-layer.zip"
+        "/sharp-processor/lambda-layer.zip"
       ),
       lambdaMemorySize: 2048,
       lambdaTimeout: 1,
       sqsVisibilityTimeout: 1.5,
-      eventSource: "hotspace.image-processor",
+      eventSource: "hotspace.sharp-processor",
       eventRuleTarget: webhook.eventTarget,
       eventBus: appEventBus,
       bucket: fileNodesStorage.bucket,
