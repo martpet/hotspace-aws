@@ -78,5 +78,21 @@ export class HotspaceStack extends cdk.Stack {
       bucket: fileNodesStorage.bucket,
       backendGroup: identity.backendGroup,
     });
+
+    new MediaProcessor(this, "PandocProcessor", {
+      lambdaPath: path.join(__dirname, "/media-processors/pandoc/lambda"),
+      lambdaLayerPath: path.join(
+        __dirname,
+        "/media-processors/pandoc/lambda-layer.zip"
+      ),
+      lambdaMemorySize: 2048,
+      lambdaTimeout: 1,
+      sqsVisibilityTimeout: 1.5,
+      eventSource: "hotspace.pandoc-processor",
+      eventRuleTarget: webhook.eventTarget,
+      eventBus: appEventBus,
+      bucket: fileNodesStorage.bucket,
+      backendGroup: identity.backendGroup,
+    });
   }
 }
