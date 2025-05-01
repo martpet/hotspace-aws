@@ -50,7 +50,15 @@ export class HotspaceStack extends cdk.Stack {
       backendGroup: identity.backendGroup,
     });
 
+    const baseProcessorProps = {
+      eventRuleTarget: webhook.eventTarget,
+      eventBus: appEventBus,
+      bucket: fileNodesStorage.bucket,
+      backendGroup: identity.backendGroup,
+    };
+
     new MediaProcessor(this, "SharpProcessor", {
+      ...baseProcessorProps,
       lambdaPath: path.join(__dirname, "/media-processors/sharp/lambda"),
       lambdaLayerPath: path.join(
         __dirname,
@@ -60,26 +68,20 @@ export class HotspaceStack extends cdk.Stack {
       lambdaTimeout: 1,
       sqsVisibilityTimeout: 1.5,
       eventSource: "hotspace.sharp-processor",
-      eventRuleTarget: webhook.eventTarget,
-      eventBus: appEventBus,
-      bucket: fileNodesStorage.bucket,
-      backendGroup: identity.backendGroup,
     });
 
     new MediaProcessor(this, "LibreProcessor", {
+      ...baseProcessorProps,
       lambdaDockerPath: path.join(__dirname, "/media-processors/libre"),
       lambdaMemorySize: 3000,
       lambdaEphemeralStorageSize: 1000,
       lambdaTimeout: 1.5,
       sqsVisibilityTimeout: 2,
       eventSource: "hotspace.libre-processor",
-      eventRuleTarget: webhook.eventTarget,
-      eventBus: appEventBus,
-      bucket: fileNodesStorage.bucket,
-      backendGroup: identity.backendGroup,
     });
 
     new MediaProcessor(this, "PandocProcessor", {
+      ...baseProcessorProps,
       lambdaPath: path.join(__dirname, "/media-processors/pandoc/lambda"),
       lambdaLayerPath: path.join(
         __dirname,
@@ -89,10 +91,6 @@ export class HotspaceStack extends cdk.Stack {
       lambdaTimeout: 1,
       sqsVisibilityTimeout: 1.5,
       eventSource: "hotspace.pandoc-processor",
-      eventRuleTarget: webhook.eventTarget,
-      eventBus: appEventBus,
-      bucket: fileNodesStorage.bucket,
-      backendGroup: identity.backendGroup,
     });
   }
 }
