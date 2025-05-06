@@ -87,9 +87,9 @@ export class HotspaceStack extends cdk.Stack {
         __dirname,
         "/media-processors/pandoc/lambda-layer.zip"
       ),
-      lambdaMemorySize: 2048,
-      lambdaTimeout: 1,
-      sqsVisibilityTimeout: 1.5,
+      lambdaMemorySize: 3000,
+      lambdaTimeout: 1.5,
+      sqsVisibilityTimeout: 2,
       eventSource: "hotspace.pandoc-processor",
     });
   }
