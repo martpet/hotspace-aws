@@ -1,7 +1,9 @@
 import * as cdk from "aws-cdk-lib";
+import { Size } from "aws-cdk-lib";
 import * as events from "aws-cdk-lib/aws-events";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
+import { FunctionProps } from "aws-cdk-lib/aws-lambda";
 import * as lambdaEventSources from "aws-cdk-lib/aws-lambda-event-sources";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as sqs from "aws-cdk-lib/aws-sqs";
@@ -65,11 +67,13 @@ export class MediaProcessor extends Construct {
 
     let lambdaFn;
 
-    const lambdaProps = {
+    const lambdaProps: Omit<FunctionProps, "code" | "handler"> = {
       runtime: lambda.Runtime.NODEJS_22_X,
       timeout: cdk.Duration.minutes(lambdaTimeout),
       memorySize: lambdaMemorySize,
-      lambdaEphemeralStorageSize,
+      ephemeralStorageSize: lambdaEphemeralStorageSize
+        ? Size.mebibytes(lambdaEphemeralStorageSize)
+        : undefined,
       events: [new lambdaEventSources.SqsEventSource(queue, { batchSize: 1 })],
       environment: {
         SQS_QUEUE_MAX_RECEIVE_COUNT: SQS_QUEUE_MAX_RECEIVE_COUNT.toString(),
