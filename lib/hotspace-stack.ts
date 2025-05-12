@@ -2,6 +2,7 @@ import * as cdk from "aws-cdk-lib";
 import * as events from "aws-cdk-lib/aws-events";
 import { Construct } from "constructs";
 import * as path from "path";
+import { AdminAlert } from "./admin-alert";
 import { AssetsCdn } from "./assets-cdn";
 import { DenoKvBackup } from "./deno-kv-backup";
 import { FileNodesCdn } from "./file-nodes-cdn";
@@ -32,6 +33,10 @@ export class HotspaceStack extends cdk.Stack {
 
     new DenoKvBackup(this, "DenoKvBackup", {
       denoDeployKvBackupUser: identity.denoDeployKvBackupUser,
+    });
+
+    new AdminAlert(this, "AdminAlert", {
+      backendGroup: identity.backendGroup,
     });
 
     if (isProd) {
