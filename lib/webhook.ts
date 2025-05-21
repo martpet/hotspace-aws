@@ -25,16 +25,13 @@ export class Webhook extends Construct {
       ),
     });
 
-    const destination = new events.ApiDestination(this, "Destination", {
-      connection,
-      endpoint: `https://${APP_DOMAIN}${WEBHOOKS_PATH}`,
-      httpMethod: events.HttpMethod.POST,
-    });
-
-    let eventTarget;
-
     if (isProd) {
-      eventTarget = new targets.ApiDestination(destination);
+      const destination = new events.ApiDestination(this, "Destination", {
+        connection,
+        endpoint: `https://${APP_DOMAIN}${WEBHOOKS_PATH}`,
+        httpMethod: events.HttpMethod.POST,
+      });
+      this.eventTarget = new targets.ApiDestination(destination);
     } else {
       const fn = new lambda.Function(this, "LambdaProxy", {
         runtime: lambda.Runtime.NODEJS_18_X,
@@ -54,9 +51,7 @@ export class Webhook extends Construct {
           };
         `),
       });
-      eventTarget = new targets.LambdaFunction(fn);
+      this.eventTarget = new targets.LambdaFunction(fn);
     }
-
-    this.eventTarget = eventTarget;
   }
 }
