@@ -35,7 +35,7 @@ export class FileNodesStorage extends Construct {
 
     const allowedOrigins = isProd
       ? [`https://${APP_DOMAIN}`, `https://${ASSETS_DOMAIN}`]
-      : ["https://hotspace.local"];
+      : ["*"];
 
     const bucketCors = {
       allowedOrigins,

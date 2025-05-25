@@ -39,8 +39,10 @@ export class Webhook extends Construct {
         environment: { API_KEY: secret.secretValue.unsafeUnwrap() },
         code: lambda.Code.fromInline(`
           exports.handler = async function(event) {
-            const devAppUrl = event.detail.devAppUrl || event.detail.userMetadata?.devAppUrl;
-            const resp = await fetch(devAppUrl + "${WEBHOOKS_PATH}", {
+            const { detail } = event;
+            const appUrl = detail.appUrl || detail.userMetadata?.appUrl || detail.data?.object?.metadata?.appUrl;
+            if (!appUrl) throw new Error("Missing appUrl");
+            const resp = await fetch(appUrl + "${WEBHOOKS_PATH}", {
               body: JSON.stringify(event),
               method: "post",
               headers: { 'x-api-key': process.env.API_KEY }
