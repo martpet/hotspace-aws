@@ -45,6 +45,9 @@ export class FileNodesCdn extends Construct {
           accessControlAllowHeaders: fileNodesBucketCors.allowedHeaders,
           originOverride: true,
         },
+        securityHeadersBehavior: {
+          contentTypeOptions: { override: true },
+        },
         customHeadersBehavior: {
           customHeaders: [
             {
